@@ -1,0 +1,15 @@
+void smasher_piece();			//pass column selection.
+void smasher_piece()
+{
+	int column;
+	cout << "choose column to smash\n";
+	cin >> column;
+
+		for (int i = 0; i <= 5; i++)
+		{
+			board[i][column] = 0;			//convert every peice in column to 0
+		}
+
+		board[5][column] = player;
+
+}

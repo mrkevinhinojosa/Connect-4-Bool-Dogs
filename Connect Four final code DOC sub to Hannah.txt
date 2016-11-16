@@ -1,0 +1,1083 @@
+//Luke Melton (Of the BoolDogs)
+//CSCI 150
+//Project: Connect Four
+//StartDate: 9/2/2016
+//Deadline: 12/16/2016
+
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <ctime> //Used for random number generation in our coin_toss function and possibly for the AI?
+#include <cstdlib> 
+#include <Windows.h> //For text color
+using namespace std;
+
+void turn_player_one();
+void turn_player_two();
+void turn_computer_one();
+void turn_computer_two();
+
+void one_player_game();
+void two_player_game();
+void computer_game();
+
+void draw_board();
+void inventory();
+void draw_inventory();
+void board_reset();
+
+void xbomb();
+void swappa();
+
+
+void p1powerup();
+void p1xbomb();
+void p1smasher_piece();
+//-----------------------//
+bool b1p1 = true;        //
+bool xbombp1 = true;     //
+bool swapperp1 = true;   //
+						 //-----------------------//
+bool p1flag = false;
+
+void p2powerup();
+void p2xbomb();
+void p2smasher_piece();
+//-----------------------//
+bool b1p2 = true;        //
+bool xbombp2 = true;     //
+bool swapperp2 = true;   //
+						 //-----------------------//
+bool p2flag = false;
+
+
+int coin_toss();
+bool win_check();
+
+bool check_diagonal_NE_SW();
+bool check_diagonal_NW_SE();
+bool check_vertical();
+bool check_horizontal();
+
+int x;			//Global for Column
+int y;			//Global for Row
+char player;	//Global for Last player who placed a piece
+string name1 = "Player 1"; //Player one's prefered name
+string name2 = "Player 2"; //Player two's prefered name
+int powh1 = 0;  // Helper variable to determine when the powerup is distrubited. Basically tracks turns for each payer
+int powh2 = 0;
+char board[6][7] = {
+	{ ' ',' ',' ',' ',' ',' ',' ' }, //Initialization of board
+	{ ' ',' ',' ',' ',' ',' ',' ' },
+	{ ' ',' ',' ',' ',' ',' ',' ' },
+	{ ' ',' ',' ',' ',' ',' ',' ' },
+	{ ' ',' ',' ',' ',' ',' ',' ' },
+	{ ' ',' ',' ',' ',' ',' ',' ' }
+};
+
+int main()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE); //For color lines to work
+	string answer;
+	while (answer != "5") //Allows user to play game multiple times before program terminates
+	{
+	nm:
+		cout << "Welcome to the 'BoolDogs' patented, trademarked, registered, reserved, and divinely given highly competitive game: CONNECT FOUR!" << endl << endl;
+		cout << "Now then! What mode do you wish to play?:" << endl << endl;
+
+		//Menu for game selection
+		cout << "------------------------------------------" << endl;
+		cout << "1) Two Player(s) - (User against User)" << endl;
+		cout << "2) Inventory Test " << endl;
+		cout << "3) Exit Game " << endl;
+		cout << "------------------------------------------" << endl << endl;
+
+		cin >> answer;
+
+		//Error check for menu selection
+		while (answer != "1" && answer != "2" && answer != "3")
+		{
+			cout << "Invalid selection. Please choose a valid response." << endl;
+			cin >> answer;
+		}
+
+		if (answer == "1") //Two player game starter
+		{
+			cout << "Player 1, please enter your prefered name: ";
+			cin >> name1;
+			cout << endl;
+			cout << "Player 2, please enter your prefered name: ";
+			cin >> name2;
+			cout << endl;
+			two_player_game();
+		}
+
+		else if (answer == "2")
+		{
+			inventory();
+		}
+
+		else if (answer == "3")
+		{
+			break;
+		}
+
+
+
+		/*else if (answer != "0" && answer != "1" && answer != "2" && answer != "3" && answer != "4" && answer != "5" && answer != "6")
+		{
+		cout << endl;
+		cout << "Invalid response, Please enter one of the valid responses listed" << endl << endl;
+		goto nm;
+		}*/
+
+		system("CLS"); //Clears screen
+		draw_board();  
+
+		//After win check is run and found true, the last player that had a turn caused the win check to return true and therefore must have satisfied a win
+		if (player == 'X')
+		{
+			SetConsoleTextAttribute(hConsole, 13);
+			cout << "Congratulations, " << name1 << "! You won!" << endl;
+		}
+		if (player == 'O')
+		{
+			SetConsoleTextAttribute(hConsole, 13);
+			cout << "Congratulations, " << name2 << "! You won!" << endl;
+		}
+		SetConsoleTextAttribute(hConsole, 15);
+		//Resets board for next game
+		board_reset();
+	}
+	cout << "This is the end of our program, the game will now terminate." << endl;
+	cout << "Thank you for playing!" << endl;
+
+	return 0;
+}
+
+//---------------------------------------------------------------------------------------------------------- PLAYER TURN FUNCTIONS ---------------------------------------------------------------------------------------------------------//
+//Function for player one's turn
+void turn_player_one()
+{
+	system("CLS");
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	string columns;
+	int column;
+
+reask:
+	cout << "It is now ";
+	SetConsoleTextAttribute(hConsole, 2);
+	cout << name1;
+	SetConsoleTextAttribute(hConsole, 15);
+	cout << "'s turn." << endl;
+	cout << "Here is the board, please select where you want to place your piece:";
+	draw_board();
+	cout << "To use a  power-up press 'P'." << endl;
+	cout << "Choose a column:";
+	cin >> columns;
+	//Error checking piece input
+	while (columns != "0" && columns != "1" && columns != "2" && columns != "3" && columns != "4" && columns != "5" && columns != "6" && columns != "p" && columns != "P")
+	{
+		cout << " Wrong input. Enter a column between 0-6. " << endl;
+		cin >> columns;
+	}
+
+	//If user wishes to use an item
+	if (columns != "p" && columns != "P")
+	{
+		stringstream convert(columns);
+		convert >> column;
+		for (int i = 5; i > -1; i--)
+		{
+			if (board[i][column] == ' ')
+			{
+				board[i][column] = 'X';
+				x = column;
+				y = i;
+				player = 'X';
+				break;
+			}
+		}
+		powh1++; //Counter for item use
+	}
+	else
+	{
+		p1powerup();
+
+		if (p1flag == false)
+			goto reask;
+		else
+		{
+			p1flag = false;
+			return;
+		}
+	}
+
+}
+
+//Function for player two's turn
+void turn_player_two()
+{
+	system("CLS");
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	string columns;
+	int column;
+reask:
+	cout << "It is now ";
+	SetConsoleTextAttribute(hConsole, 2);
+	cout << name2;
+	SetConsoleTextAttribute(hConsole, 15);
+	cout << "'s turn." << endl;
+	cout << "Here is the board, please select where you want to place your piece:";
+	draw_board();
+	cout << "To use a  power-up press 'P'." << endl;
+	cout << "Choose a column:";
+	cin >> columns;
+
+	//Error check for input
+	while (columns != "0" && columns != "1" && columns != "2" && columns != "3" && columns != "4" && columns != "5" && columns != "6" && columns != "p" && columns != "P")
+	{
+		cout << " Wrong input. Enter a column between 0-6. " << endl;
+		cin >> columns;
+	}
+
+	//If user wishes to use an item
+	if (columns != "p" && columns != "P")
+	{
+		stringstream convert(columns);
+		convert >> column;
+		for (int i = 5; i > -1; i--)
+		{
+			if (board[i][column] == ' ')
+			{
+				board[i][column] = 'O';
+				x = column;
+				y = i;
+				player = 'O';
+				break;
+			}
+		}
+		powh2++; //Counter for item use
+	}
+	else
+	{
+		p2powerup();
+		if (p2flag == false)
+		{
+			goto reask;
+		}
+		else
+		{
+			p2flag = false;
+			return;
+		}
+	}
+
+}
+
+
+/*
+void one_player_game()
+{
+cout << "Okay, " << name1 << ", You chose to play a one player game!" << endl;
+cout << "You will be challenged by a computer controlled opponent." << endl;
+cout << "First, we will determine who goes first:" << endl;
+
+bool win = false;
+
+if (coin_toss() == 1)
+{
+cout << "You get to go first!" << endl; //Not finished
+while (win != true)
+{
+turn_player_one();
+win = win_check();
+if (win != true)
+{
+turn_computer_one();
+win = win_check();
+}
+}
+}
+
+else if (coin_toss() == 2)
+{
+cout << "Your opponent gets to go first!" << endl; //Not finished
+while (win != true)
+{
+turn_computer_one();
+win = win_check();
+if (win != true)
+{
+turn_player_one();
+win = win_check();
+}
+}
+}
+
+else
+{
+cout << "There seems to be an error, neither play one the coin toss." << endl;
+}
+}
+*/
+
+//-------------------------------------------------------------------------------------------- TWO PLAYER GAME FUNCTION --------------------------------------------------------------------------------------------//
+//Function for a player vs player match
+void two_player_game()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	system("CLS");
+	cout << "Alright, " << name1 << " and " << name2 << ", You chose to play a two player game!" << endl;
+	cout << "The two of you will be facing each other in a game." << endl;
+	cout << "First, we will determine who goes first:" << endl << endl;
+
+	bool win = false;
+
+	//Coin toss is the function that determines which player goes first
+	//If player 1 gets to go first
+	if (coin_toss() == 1)
+	{
+		Sleep(10000); //Sleep causes the system to delay between out-puts to allow the user to fallow the flow of the game
+		system("CLS");
+		SetConsoleTextAttribute(hConsole, 2);
+		cout << name1;
+		SetConsoleTextAttribute(hConsole, 15);
+		cout << " gets to go first!" << endl;
+		Sleep(5000);
+		while (win != true)
+		{
+			system("CLS");
+			turn_player_one();
+			win = win_check();
+			if (win != true)
+			{
+				system("CLS");
+				turn_player_two();
+				win = win_check();
+			}
+		}
+	}
+
+	//If player 2 gets to go first
+	else if (coin_toss() == 2)
+	{
+		Sleep(10000);
+		system("CLS");
+		SetConsoleTextAttribute(hConsole, 2);
+		cout << name2;
+		SetConsoleTextAttribute(hConsole, 15);
+		cout << " gets to go first!" << endl;
+		Sleep(5000);
+		while (win != true)
+		{
+			system("CLS");
+			turn_player_two();
+			win = win_check();
+			if (win != true)
+			{
+				system("CLS");
+				turn_player_one();
+				win = win_check();
+			}
+		}
+	}
+	else
+	{
+		cout << "There seems to be an error, neither player won the coin toss." << endl;
+	}
+}
+/*
+void computer_game()
+{
+cout << "You chose to have two computer controlled opponents face each other!" << endl;
+cout << "This should be interesting, place your bets!" << endl;
+cout << "First, we will determine who goes first:" << endl;
+
+bool win = false;
+
+if (coin_toss() == 1)
+{
+cout << name1 << " gets to go first!" << endl;
+while (win != true)
+{
+turn_computer_one();
+win = win_check();
+if (win != true)
+{
+turn_computer_two();
+win = win_check();
+}
+}
+}
+
+
+else if (coin_toss() == 2)
+{
+cout << name2 << " gets to go first!" << endl;
+while (win != true)
+{
+turn_computer_two();
+win = win_check();
+if (win != true)
+{
+turn_computer_one();
+win = win_check();
+}
+}
+}
+else
+{
+cout << "There seems to be an error, neither play one the coin toss." << endl;
+}
+}
+*/
+
+//------------------------------------------------------------------------------------ DRAW BOARD -----------------------------------------------------------------------------------------//
+//Function to draw board on screen
+void draw_board()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	int i = 0, j = 0;
+	cout << endl << endl;
+	SetConsoleTextAttribute(hConsole, 13);
+	cout << "  0    1    2    3    4    5    6" << endl;
+	SetConsoleTextAttribute(hConsole, 14);
+	cout << "___________________________________" << endl;
+	for (i = 0; i<6; i++)
+	{
+		for (j = 0; j<7; j++)
+		{
+			cout << "[(";
+			if (board[i][j] == 'X')
+				SetConsoleTextAttribute(hConsole, 9);
+			else if (board[i][j] == 'O')
+				SetConsoleTextAttribute(hConsole, 12);
+			cout << board[i][j];
+			SetConsoleTextAttribute(hConsole, 14);
+			cout << ")]";
+		}
+		cout << endl;
+	}
+	cout << "===================================" << endl;
+
+	SetConsoleTextAttribute(hConsole, 7);
+}
+
+//----------------------------------------------------------------------------------------- ALL POWER-UP FUNCTIONS EXIST HERE ------------------------------------------------------------------------------------------------//
+
+
+
+//-------------------------------------------------- POWER-UP STRUCTURE FUNCTION ------------------------------------------------//
+//Function for player 1 to call for a power up item
+void p1powerup()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	// -------------- Player 1 power-ups -----------------//
+
+	system("CLS");
+reask:
+	cout << "Available power-ups for ";
+	SetConsoleTextAttribute(hConsole, 2);
+	cout << name1;
+	SetConsoleTextAttribute(hConsole, 15);
+	cout << " are:" << endl;
+
+	//----------- Display Player 1 Powerups ------------//
+
+
+	if (b1p1 == true)
+	{
+		cout << "Boulder, ";
+	}
+	if (xbombp1 == true)
+	{
+		cout << "X-Bomb, ";
+	}
+	if (swapperp1 == true)
+	{
+		cout << "Swap.";
+	}
+
+	cout << endl;
+
+
+	//---- powerups are asked for use here -----//
+	string powinput;
+	cout << endl;
+	draw_board();
+	cout << endl;
+	cout << "If you would like to exit, press 1." << endl;
+	cout << "Otherwise, please type the name of the power-up you would like to use: ";
+	cin >> powinput;
+	system("CLS");
+	if (powinput == "Boulder")
+	{
+		if (b1p1 == false)
+		{
+			cout << "Boulder is not available." << endl;
+			goto reask;
+		}
+		p1flag = true;
+		p1smasher_piece();
+		b1p1 = false;
+
+	}
+	else if (powinput == "X-Bomb")
+	{
+		if (xbombp1 == false)
+		{
+			cout << "X-Bomb is not available." << endl;
+			goto reask;
+		}
+		p1flag = true;
+		p1xbomb();
+		xbombp1 = false;
+	}
+	else if (powinput == "Swap")
+	{
+		if (swapperp1 == false)
+		{
+			cout << "Swapper is not available." << endl;
+			goto reask;
+		}
+		p1flag = true;
+		swappa();
+		swapperp1 = false;
+	}
+	else if (powinput == "1")
+	{
+		return;
+	}
+	system("CLS");
+	return;
+}
+
+//Function for player 2 to call for a power up item
+void p2powerup()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	//---------- Display Player 2 Powerups -----------//
+
+	system("CLS");
+reask:
+	cout << "Available power-ups for ";
+	SetConsoleTextAttribute(hConsole, 2);
+	cout << name2;
+	SetConsoleTextAttribute(hConsole, 15);
+	cout << " are:" << endl;
+
+	if (b1p2 == true)
+	{
+		cout << "Boulder, ";
+	}
+	if (xbombp2 == true)
+	{
+		cout << "X-Bomb, ";
+	}
+	if (swapperp2 == true)
+	{
+		cout << "Swap.";
+	}
+	//---- powerups are asked for use here -----//
+	string powinput;
+	cout << endl;
+	draw_board();
+	cout << endl;
+	cout << "If you would like to exit, press 1." << endl;
+	cout << "Otherwise, please type the name of the power-up you would like to use: ";
+	cin >> powinput;
+	system("CLS");
+
+	if (powinput == "Boulder")
+	{
+		if (b1p2 == false)
+		{
+			cout << "Boulder is not available." << endl;
+			goto reask;
+		}
+		p2flag = true;
+		p2smasher_piece();
+		b1p2 = false;
+
+	}
+	else if (powinput == "X-Bomb")
+	{
+		if (xbombp2 == false)
+		{
+			cout << "X-Bomb is not available." << endl;
+			goto reask;
+		}
+		p2flag = true;
+		p2xbomb();
+		xbombp2 = false;
+	}
+	else if (powinput == "Swap")
+	{
+		if (swapperp2 == false)
+		{
+			cout << "Swap is not available." << endl;
+			goto reask;
+		}
+		p2flag = true;
+		swappa();
+		swapperp2 = false;
+	}
+	else if (powinput == "1")
+	{
+		return;
+	}
+	system("CLS");
+
+	return;
+}
+//-------------------------------------- SWAP PIECES FUNCTION-----------------------------------//
+
+void swappa()
+{
+	for (int j = 0; j < 7; j++)
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			if (board[i][j] == 'O')
+			{
+				board[i][j] = 'X';
+			}
+			else if (board[i][j] == 'X')
+			{
+				board[i][j] = 'O';
+			}
+		}
+	}
+	return;
+}
+
+//-------------------------------- BOULDER FUNCTION------------------------------------------//
+
+void p1smasher_piece()
+{
+	string columns;
+	int column;
+	system("CLS");
+	draw_board();
+	cout << "choose column to smash\n";
+	cin >> columns;
+	while (columns != "0" && columns != "1" && columns != "2" && columns != "3" && columns != "4" && columns != "5" && columns != "6")
+	{
+		cout << " Wrong input. Enter a column between 0-6. " << endl;
+		cin >> columns;
+	}
+	stringstream convert(columns);
+	convert >> column;
+	for (int i = 0; i <= 5; i++)
+	{
+		board[i][column] = ' ';			//convert every peice in column to 0
+	}
+
+	board[5][column] = 'X';
+	system("CLS");
+}
+
+void p2smasher_piece()
+{
+	string columns;
+	int column;
+	system("CLS");
+	draw_board();
+	cout << "choose column to smash\n";
+	cin >> columns;
+	while (columns != "0" && columns != "1" && columns != "2" && columns != "3" && columns != "4" && columns != "5" && columns != "6")
+	{
+		cout << " Wrong input. Enter a column between 0-6. " << endl;
+		cin >> columns;
+	}
+	stringstream convert(columns);
+	convert >> column;
+	for (int i = 0; i <= 5; i++)
+	{
+		board[i][column] = ' ';			//convert every peice in column to 0
+	}
+
+	board[5][column] = 'O';
+	system("CLS");
+}
+//-------------------------------------- X-BOMB FUNCTION ---------------------------------//
+void p1xbomb()
+{
+	string columns;
+	int column;
+	draw_board();
+	cout << "choose column to drop la bomba\n";
+	cin >> columns;
+	while (columns != "0" && columns != "1" && columns != "2" && columns != "3" && columns != "4" && columns != "5" && columns != "6")
+	{
+		cout << " Wrong input. Enter a column between 0-6. " << endl;
+		cin >> columns;
+	}
+	stringstream convert(columns);
+	convert >> column;
+	int location;
+	for (int i = 5; i>-1; i--)
+	{
+		if (board[i][column] != ' ')
+		{
+			board[i][column] = 'X';
+			location = i;
+			break;
+		}
+	}
+
+	int temp = location;
+	int tempc = column;
+	while (temp > -1 && tempc < 7) //upper right
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp--;
+		tempc++;
+	}
+
+	temp = location;
+	tempc = column;
+	while (temp > -1 && tempc > -1) //upper left
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp--;
+		tempc--;
+	}
+
+	temp = location;
+	tempc = column;
+	while (temp < 6 && tempc < 7) //lower right
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp++;
+		tempc++;
+	}
+
+	temp = location;
+	tempc = column;
+	while (location < 6 && column > -1) //lower left
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp--;
+		tempc--;
+	}
+
+	for (int i = 5; i > -1; i--)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			if (board[i][j] == ' ' && i != 0)
+			{
+				board[i][j] = board[i - 1][j];
+				board[i - 1][j] = ' ';
+			}
+
+		}
+
+	}
+
+}
+
+//----------------------------------------------------Player 2 XBomb------------------------------------------------
+void p2xbomb()
+{
+	string columns;
+	int column;
+	draw_board();
+	cout << "choose column to drop la bomba\n";
+	cin >> columns;
+	while (columns != "0" && columns != "1" && columns != "2" && columns != "3" && columns != "4" && columns != "5" && columns != "6")
+	{
+		cout << " Wrong input. Enter a column between 0-6. " << endl;
+		cin >> columns;
+	}
+	stringstream convert(columns);
+	convert >> column;
+	int location;
+	for (int i = 5; i>-1; i--)
+	{
+		if (board[i][column] != ' ')
+		{
+			board[i][column] = 'O';
+			location = i;
+			break;
+		}
+	}
+
+	int temp = location;
+	int tempc = column;
+	while (temp > -1 && tempc < 7) //upper right
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp--;
+		tempc++;
+	}
+
+	temp = location;
+	tempc = column;
+	while (temp > -1 && tempc > -1) //upper left
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp--;
+		tempc--;
+	}
+
+	temp = location;
+	tempc = column;
+	while (temp < 6 && tempc < 7) //lower right
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp++;
+		tempc++;
+	}
+
+	temp = location;
+	tempc = column;
+	while (location < 6 && column > -1) //lower left
+	{
+		if (tempc != column && temp != location)
+		{
+			if (temp == -1 || temp == 6 || tempc == -1 || tempc == 7)
+				break;
+			board[temp][tempc] = ' ';
+		}
+		temp--;
+		tempc--;
+	}
+
+	for (int i = 5; i > -1; i--)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			if (board[i][j] == ' ' && i != 0)
+			{
+				board[i][j] = board[i - 1][j];
+				board[i - 1][j] = ' ';
+			}
+
+		}
+
+	}
+
+}
+//------------------------------------------------------------------------------------------------ COINT TOSS FUNCTION -----------------------------------------------------------------------------------------------------------------//
+int coin_toss()
+{
+	srand((unsigned)time(0));
+	return (rand() % 2) + 1;
+}
+
+bool win_check()
+{
+	if (check_diagonal_NE_SW())
+		return true;
+	else if (check_diagonal_NW_SE())
+		return true;
+	else if (check_vertical())
+		return true;
+	else if (check_horizontal())
+		return true;
+	else
+		return false;
+}
+
+//--------------------------------------------------------------------------------------- WIN CONDITION CHECKER FUNCTIONS ------------------------------------------------------------------------------------------------------------//
+bool check_diagonal_NE_SW()
+{
+	int score = 1;
+	int counter = 1;
+	while ((y - counter >= 0) && (x + counter < 7))
+	{
+		if (board[y - counter][x + counter] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	counter = 1;
+	while ((y + counter < 6) && (x - counter >= 0))
+	{
+		if (board[y + counter][x - counter] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	if (score == 4)
+		return true;
+	else
+		return false;
+}
+
+bool check_diagonal_NW_SE()
+{
+	int score = 1;
+	int counter = 1;
+
+	while ((y + counter >= 0) && (x + counter < 7))
+	{
+		if (board[y + counter][x + counter] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	counter = 1;
+	while ((y - counter < 6) && (x - counter >= 0))
+	{
+		if (board[y - counter][x - counter] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	if (score == 4)
+		return true;
+	else
+		return false;
+}
+
+bool check_vertical()
+{
+	int score = 1;
+	int counter = 1;
+
+	while (y + counter >= 0 && y + counter < 6)
+	{
+		if (board[y + counter][x] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	if (score >= 4)
+		return true;
+	else
+		return false;
+}
+
+bool check_horizontal()
+{
+	int score = 1;
+	int counter = 1;
+
+	while ((x + counter >= 0) && (x + counter < 7))
+	{
+		if (board[y][x + counter] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	counter = 1;
+	while ((x - counter < 7) && (x - counter >= 0))
+	{
+		if (board[y][x - counter] == player)
+		{
+			score++;
+			counter++;
+		}
+		else break;
+	}
+
+	if (score >= 4)
+		return true;
+	else
+		return false;
+}
+
+//----------------------------------------------------------------------------------------------------------- INVENTORY FUNCTION ---------------------------------------------------------------------------------------------------------------//
+
+void inventory()
+{
+	system("CLS");
+	int answer;
+	cout << endl;
+	cout << "Use item?" << endl;
+	draw_inventory();
+	cin >> answer;
+	if (answer == 1)
+		draw_board();
+	else if (answer == 2)
+		return;
+	else
+		cout << "Invalid response, not item used" << endl;
+
+}
+
+void draw_inventory()
+{
+	cout << "Here are your available items:" << endl;
+	cout << "==============================" << endl;
+	cout << "(1) Draw board" << endl;
+	cout << "(2) Exit Inventory" << endl;
+	cout << "==============================" << endl;
+}
+
+
+//Resets board
+void board_reset()
+{
+	int i, k;
+	for (i = 0; i < 6; i++)
+	{
+		for (k = 0; k < 7; k++)
+		{
+			board[i][k] = ' ';
+		}
+	}
+	b1p1 = true;
+	xbombp1 = true;
+	swapperp1 = true;
+	b1p2 = true;
+	xbombp2 = true;
+	swapperp2 = true;
+}
